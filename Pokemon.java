@@ -15,15 +15,53 @@ class Pokemon {
     private int vit;
 
     public Pokemon() {
-        // TODO
+        this.numPokedex = 0;
+        this.nom = "Missingno";
+        this.type1 = Type.NORMAL;
+        this.type2 = Type.SANS;
+        this.pv = 1;
+        this.pvMax = 1;
+        this.att = 0;
+        this.def = 0;
+        this.vit = 0;
     }
 
     public Pokemon(int numPokedex, String nom, int type1, int type2, int pv, int att, int def, int vit) {
-        // TODO
+        this.numPokedex = numPokedex;
+        this.nom = nom;
+        this.type1 = type1;
+        this.type2 = type2;
+        this.pv = pv;
+        this.pvMax = pv;
+        this.att = att;
+        this.def = def;
+        this.vit = vit;
     }
 
     public Pokemon(int numPokedex, String nom, String cheminCSV) {
-        // TODO
+        this.numPokedex = numPokedex;
+        this.nom = nom;
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(cheminCSV));
+            String line;
+            br.readLine(); // sauter l'en-tête
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(";", -1);
+                if (Integer.parseInt(parts[0]) == numPokedex) {
+                    this.type1 = Type.getIndiceType(parts[2]);
+                    this.type2 = parts[3].isEmpty() ? Type.SANS : Type.getIndiceType(parts[3]);
+                    this.pv    = Integer.parseInt(parts[4]);
+                    this.pvMax = this.pv;
+                    this.att   = Integer.parseInt(parts[5]);
+                    this.def   = Integer.parseInt(parts[6]);
+                    this.vit   = Integer.parseInt(parts[7]);
+                    break;
+                }
+            }
+            br.close();
+        } catch (IOException e) {
+            System.out.println("Erreur lecture CSV : " + e.getMessage());
+        }
     }
 
     public int getNumPokedex() { return numPokedex; }
