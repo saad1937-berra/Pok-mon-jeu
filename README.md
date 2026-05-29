@@ -2,6 +2,11 @@
 
 Moteur de combat et jeu d'échecs Pokémon en Java (génération 1).
 
+## Binôme
+
+- Saad Berra
+- Aya Ouknouz
+
 ## Compilation
 
 ```bash
