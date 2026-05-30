@@ -34,7 +34,7 @@ class Pokemon {
         this.type1 = type1;
         this.type2 = type2;
         this.pv = pv;
-        this.pvMax = pv;  // pvMax = pv initial
+        this.pvMax = pv;
         this.att = att;
         this.def = def;
         this.vit = vit;
@@ -44,7 +44,6 @@ class Pokemon {
     public Pokemon(int numPokedex, String nom, String cheminCSV) {
         this.numPokedex = numPokedex;
         this.nom = nom;
-        // Valeurs par défaut en cas d'échec
         this.type1 = Type.NORMAL;
         this.type2 = Type.SANS;
         this.pv = 1; this.pvMax = 1;
@@ -86,7 +85,6 @@ class Pokemon {
     public void setNom(String nom) { this.nom = nom; }
     public void setPv(int pv)      { this.pv = pv; }
 
-    // Vivant = PV strictement positifs
     public boolean estVivant() {
         return pv > 0;
     }
@@ -107,33 +105,61 @@ class Pokemon {
         return this.numPokedex == autre.numPokedex;
     }
 
-    // Calcul des dégâts avec efficacité de type
-    // Formule : degats = (att / def) * efficacite(type1Att, type1Def)
     public void attaque(Pokemon adversaire) {
-        // Efficacité du type1 attaquant contre les deux types du défenseur
-        double efficacite1 = Type.getEfficacite(this.type1, adversaire.getType1());
-        double efficacite2 = (adversaire.getType2() != Type.SANS)
-                             ? Type.getEfficacite(this.type1, adversaire.getType2())
-                             : 1.0;
+        // Déterminer qui attaque en premier selon la vitesse
+        Pokemon premier = (this.vit >= adversaire.getVit()) ? this : adversaire;
+        Pokemon second  = (premier == this) ? adversaire : this;
 
-        double multiplicateur = efficacite1 * efficacite2;
+        System.out.println(premier.getNom() + " attaque en premier !");
 
-        // Affichage du message d'efficacité
-        if (multiplicateur == 0.0) {
-            System.out.println("Ça n'affecte pas " + adversaire.getNom() + "...");
-        } else if (multiplicateur > 1.0) {
+        // === ATTAQUE DU PREMIER ===
+        double efficacite = Type.getEfficacite(premier.getType1(), second.getType1());
+        if (second.getType2() != Type.SANS) {
+            efficacite *= Type.getEfficacite(premier.getType1(), second.getType2());
+        }
+
+        int degats = (int)((premier.getAtt() - second.getDef()) * efficacite);
+        degats = Math.max(1, degats);
+
+        if (efficacite == 0.0) {
+            System.out.println("Ça n'affecte pas " + second.getNom() + "...");
+            degats = 0;
+        } else if (efficacite > 1.0) {
             System.out.println("C'est super efficace !");
-        } else if (multiplicateur < 1.0) {
+        } else if (efficacite < 1.0) {
             System.out.println("Ce n'est pas très efficace...");
         }
 
-        // Calcul des dégâts (minimum 1 si l'attaque touche)
-        if (multiplicateur > 0.0) {
-            int degats = (int) Math.max(1, (this.att / (double) adversaire.getDef()) * 10 * multiplicateur);
-            int nouveauxPv = Math.max(0, adversaire.getPv() - degats);
-            adversaire.setPv(nouveauxPv);
-            System.out.printf("%s attaque %s — %d dégâts (PV: %d → %d)%n",
-                this.nom, adversaire.getNom(), degats, adversaire.getPv() + degats, nouveauxPv);
+        second.setPv(second.getPv() - degats);
+        System.out.printf("%s inflige %d dégâts à %s (PV restants : %d/%d)%n",
+            premier.getNom(), degats, second.getNom(), second.getPv(), second.getPvMax());
+
+        // === CONTRE-ATTAQUE DU SECOND (si encore vivant) ===
+        if (second.estVivant()) {
+            System.out.println(second.getNom() + " contre-attaque !");
+
+            double efficacite2 = Type.getEfficacite(second.getType1(), premier.getType1());
+            if (premier.getType2() != Type.SANS) {
+                efficacite2 *= Type.getEfficacite(second.getType1(), premier.getType2());
+            }
+
+            int degats2 = (int)((second.getAtt() - premier.getDef()) * efficacite2);
+            degats2 = Math.max(1, degats2);
+
+            if (efficacite2 == 0.0) {
+                System.out.println("Ça n'affecte pas " + premier.getNom() + "...");
+                degats2 = 0;
+            } else if (efficacite2 > 1.0) {
+                System.out.println("C'est super efficace !");
+            } else if (efficacite2 < 1.0) {
+                System.out.println("Ce n'est pas très efficace...");
+            }
+
+            premier.setPv(premier.getPv() - degats2);
+            System.out.printf("%s inflige %d dégâts à %s (PV restants : %d/%d)%n",
+                second.getNom(), degats2, premier.getNom(), premier.getPv(), premier.getPvMax());
+        } else {
+            System.out.println(second.getNom() + " est K.O. !");
         }
     }
 }
